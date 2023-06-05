@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "70233164210",
+    "project_id": "traffic-light-detection-a2d71",
+    "storage_bucket": "traffic-light-detection-a2d71.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:70233164210:android:d19eccc4faa2ef2af27cab",
+        "android_client_info": {
+          "package_name": "com.example.traffic_light_detection"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "70233164210-chs5f81aglbeq7deaueqbua3fjdhtkoq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuiigVYRzqTHVkVCRkZlAtQ4fbbtib9N8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "70233164210-chs5f81aglbeq7deaueqbua3fjdhtkoq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
