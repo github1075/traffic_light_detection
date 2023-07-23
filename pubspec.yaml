@@ -38,6 +38,30 @@ dependencies:
   firebase_core: ^2.13.1
   firebase_auth: ^4.6.2
   flutter_spinkit: ^5.2.0
+  fluttertoast: ^8.2.2
+  validators: ^3.0.0
+  date_format: ^2.0.7
+  cloud_firestore: ^4.8.0
+  firebase_database: ^10.2.2
+  animated_text_kit: ^4.2.2
+  image: ^4.0.17
+  tflite: ^1.1.2
+  snippet_coder_utils: ^1.0.14
+  youtube_player_flutter: ^8.1.2
+  google_maps_flutter: ^2.3.1
+  geolocator: ^9.0.2
+  permission_handler: ^8.3.0
+  flutter_rating_bar: ^4.0.1
+  shared_preferences: ^2.2.0
+  firebase_storage: ^11.2.5
+  image_picker: ^0.8.4+2
+  flutter_svg: ^2.0.7
+  http: ^1.1.0
+  graphql_flutter: ^5.0.0
+
+
+
+
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +89,9 @@ flutter:
   assets:
     - images/traffic_light2.png
     - images/traffic_bacground2.jpeg
+    - images/welcome.png
+    - images/profile.png
+    - assets/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

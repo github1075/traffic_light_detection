@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter/material.dart';
 import 'package:traffic_light_detection/pages/loginPage.dart';
@@ -43,6 +44,8 @@ class _LoadingPageState extends State<LoadingPage> {
           fit: StackFit.expand,
           children: <Widget>[
             Container(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image: AssetImage("images/traffic_bacground2.jpeg"),
@@ -52,19 +55,26 @@ class _LoadingPageState extends State<LoadingPage> {
             ),
             Column(
               children: [
-                Container(
-                  margin: EdgeInsets.only(top:200, bottom: 12),
-                  child: Text(
-                    "Traffic Light Detection App",
+                SizedBox(height:220,),
+                SizedBox(
+                  width: 250.0,
+                  child: DefaultTextStyle(
                     style: TextStyle(
-                        fontSize: 25,
-                        color: Colors.white,
-                        backgroundColor:Colors.black38,
-                        fontWeight: FontWeight.bold),
+                      color:Colors.white,
+                      fontWeight:FontWeight.w500,
+                      fontSize: 60.0,
+                      backgroundColor: Colors.black54,
+                      fontFamily: 'Canterbury',
+                    ),
+                    child: AnimatedTextKit(
+                      animatedTexts: [
+                        ScaleAnimatedText('Welcome'),
+                      ],
+                    ),
                   ),
                 ),
                 SizedBox(
-                  height:320,
+                  height:220,
                 ),
                 SpinKitCircle(
                   color: Colors.white,
