@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:traffic_light_detection/pages/dashboardPage.dart';
 import 'package:traffic_light_detection/pages/signupPage.dart';
 import 'package:traffic_light_detection/utils/colorUtils.dart';
-
 import '../reusable_widget/reusableWidget.dart';
 
 class LoginPage extends StatefulWidget {
@@ -18,6 +17,15 @@ class _LoginPageState extends State<LoginPage> {
   bool _isChecked = false;
   TextEditingController _passwordTextController = TextEditingController();
   TextEditingController _emailTextController = TextEditingController();
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _passwordTextController.dispose();
+    _emailTextController.dispose();
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -60,6 +68,27 @@ class _LoginPageState extends State<LoginPage> {
       print(e);
     }
   }
+  // error message
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void _signInWithEmailAndPassword() {
+    print("entering");
+    var email=_emailTextController.text;
+    var password=_passwordTextController.text;
+    print("$email+$password");
+    FirebaseAuth.instance
+        .signInWithEmailAndPassword(email: email, password: password)
+        .then((value) async{
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => DashboardPage()));
+    }).catchError((error)async {
+      _showSnackbar("Invalid email or password");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,10 +98,10 @@ class _LoginPageState extends State<LoginPage> {
         height: MediaQuery.of(context).size.height,
         decoration: BoxDecoration(
             gradient: LinearGradient(colors: [
-          hexStringToColor("5C2774"),
-          hexStringToColor("335CC5"),
-          hexStringToColor("637FFD"),
-        ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+              hexStringToColor("5C2774"),
+              hexStringToColor("335CC5"),
+              hexStringToColor("637FFD"),
+            ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
         child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
@@ -93,45 +122,57 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(
                   height: 20,
                 ),
-                firebaseUIButton(context, "LogIn", () {
-                  FirebaseAuth.instance
-                      .signInWithEmailAndPassword(
-                          email: _emailTextController.text,
-                          password: _passwordTextController.text)
-                      .then((value) {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => DashboardPage()));
-                  }).onError((error, stackTrace) {
-                    print("Error ${error.toString()}");
-                  });
-                }),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: 50,
+                  margin: const EdgeInsets.fromLTRB(0, 10, 0, 20),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(90)),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _signInWithEmailAndPassword();
+                    },
+                    child: Text("LogIn",
+                      style: const TextStyle(
+                          color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.resolveWith((states) {
+                          if (states.contains(MaterialState.pressed)) {
+                            return Colors.black26;
+                          }
+                          return Colors.white;
+                        }),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)))),
+                  ),
+                ),
                 SizedBox(
                   height: 10,
                 ),
-              Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-                SizedBox(
-                    height: 24.0,
-                    width: 24.0,
-                    child: Theme(
-                      data: ThemeData(
-                          unselectedWidgetColor:Colors.white// Your color
-                      ),
-                      child: Checkbox(
-                          activeColor: Colors.black,
-                          value: _isChecked,
-                          onChanged: (value){
-                            _handleRemeberme(value!);
-                          }
-                      ),
-                    )),
-                SizedBox(width: 10.0),
-                Text("Remember Me",
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Rubic'))
-              ]),
+                Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                  SizedBox(
+                      height: 24.0,
+                      width: 24.0,
+                      child: Theme(
+                        data: ThemeData(
+                            unselectedWidgetColor:Colors.white// Your color
+                        ),
+                        child: Checkbox(
+                            activeColor: Colors.black,
+                            value: _isChecked,
+                            onChanged: (value){
+                              _handleRemeberme(value!);
+                            }
+                        ),
+                      )),
+                  SizedBox(width: 10.0),
+                  Text("Remember Me",
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Rubic'))
+                ]),
                 SizedBox(height: 20,),
 
                 signupOption(context)

@@ -4,121 +4,111 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class RatingPage extends StatefulWidget {
-  const RatingPage({super.key});
+  const RatingPage({Key? key}) : super(key: key);
 
   @override
   State<RatingPage> createState() => _RatingPageState();
 }
 
 class _RatingPageState extends State<RatingPage> {
-  double rating=0.0;
+  double rating = 0.0;
+  late double userRating;
+  late double averageRating;
+  late bool isUserRatingLoaded;
+  late bool isAverageRatingLoaded;
 
+  final CollectionReference ratingsCollection =
+  FirebaseFirestore.instance.collection('Ratings');
+  final String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
-  bool isDocExists=false;
-  final CollectionReference ratingsCollection = FirebaseFirestore.instance.collection('Ratings');
-  final String uid = (FirebaseAuth.instance.currentUser?.uid).toString() ;
-  //user rating
-  Future<double?> getUserRating()async {
-    DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
-        .collection('Ratings').doc(uid).get();
-    isDocExists = docSnapshot.exists;
-    if (isDocExists) {
-      rating=await docSnapshot.get("userRating");
-    }
-    else {
-      FirebaseFirestore.instance.collection('Ratings').doc(uid).set({
-        'userRating': rating
-      });
-    }
-    return rating;
-  }
-  //average rating
-  Future<double> getAverageUserRating() async {
-    double averageRating=0.0;
-    double totalRating=0.0;
-    int count = 0;
-    await ratingsCollection.get().then((querySnapshot) {
-      querySnapshot.docs.forEach((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        totalRating += data['userRating'] ?? 0;
-        count++;
-
-      });
-    });
-   print(count);
-    averageRating=(totalRating / count);
-    return averageRating ;
-  }
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-      getUserRating();
-      getAverageUserRating();
+    userRating = 0.0;
+    averageRating = 0.0;
+    isUserRatingLoaded = false;
+    isAverageRatingLoaded = false;
+    loadUserRating();
+    loadAverageUserRating();
+  }
 
+  Future<void> loadUserRating() async {
+    DocumentSnapshot docSnapshot = await ratingsCollection.doc(uid).get();
+    isUserRatingLoaded = docSnapshot.exists;
+    if (isUserRatingLoaded) {
+      userRating = docSnapshot.get('userRating');
+    } else {
+      await ratingsCollection.doc(uid).set({'userRating': userRating});
+    }
+    setState(() {});
+  }
+
+  Future<void> loadAverageUserRating() async {
+    double totalRating = 0.0;
+    int count = 0;
+    QuerySnapshot querySnapshot = await ratingsCollection.get();
+    querySnapshot.docs.forEach((doc) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      totalRating += data['userRating'] ?? 0;
+      count++;
+    });
+
+    averageRating = count > 0 ? totalRating / count : 0.0;
+    isAverageRatingLoaded = true;
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Rate This App'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        elevation: 0,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            FutureBuilder<double?>(
-              future: getUserRating(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Text('Your Rating=${snapshot.data}');
-                } else if (snapshot.hasError) {
-                  return Text('${snapshot.error}');
-                }
-                // By default, show a loading spinner.
-                return CircularProgressIndicator();
-              },
-            ),
-            SizedBox(height: 20,),
-            FutureBuilder<double?>(
-              future: getAverageUserRating(),
-              builder: (context,snapshot){
-                if(snapshot.hasData){
-                  return Text("App Rating=${snapshot.data}");
-                }
-                else if (snapshot.hasError) {
-                  return Text('${snapshot.error}');
-                }
-                // By default, show a loading spinner.
-                return CircularProgressIndicator();
-              },
-            ),
-
-            RatingBar.builder(
-              initialRating:rating,
-              minRating: 1,
-              direction: Axis.horizontal,
-              allowHalfRating: true,
-              itemCount: 5,
-              itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
-              itemBuilder: (context, _) => Icon(
-                Icons.star,
-                color: Colors.amber,
-              ),
-              onRatingUpdate: (rating) {
-                ratingsCollection.doc(uid).update({
-                  'userRating':rating
-                });
-                setState(() {
-                  this.rating = rating;
-                  getAverageUserRating();
-                });
-              },
-            ),
-            SizedBox(height: 10.0),
-            Text('Rating : $rating',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            if (isUserRatingLoaded && isAverageRatingLoaded)
+              Column(
+                children: [
+                  Text('Your Rating: $userRating'),
+                  SizedBox(height: 20),
+                  Text('App Rating: ${averageRating.toStringAsFixed(2)}'),
+                  SizedBox(height: 20),
+                  RatingBar.builder(
+                    initialRating: userRating,
+                    minRating: 1,
+                    direction: Axis.horizontal,
+                    allowHalfRating: true,
+                    itemCount: 5,
+                    itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                    itemBuilder: (context, _) => Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                    ),
+                    onRatingUpdate: (newRating) async {
+                      await ratingsCollection.doc(uid).update({'userRating': newRating});
+                      setState(() {
+                        userRating = newRating;
+                        loadAverageUserRating();
+                      });
+                    },
+                  ),
+                  SizedBox(height: 10.0),
+                  Text(
+                    'Rating: $userRating',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              )
+            else
+              CircularProgressIndicator(),
           ],
         ),
       ),

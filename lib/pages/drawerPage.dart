@@ -5,11 +5,12 @@ import 'package:traffic_light_detection/pages/countryListPage.dart';
 import 'package:traffic_light_detection/pages/dashboardPage.dart';
 import 'package:traffic_light_detection/pages/detectionPage.dart';
 import 'package:traffic_light_detection/pages/embeddedVideoPage.dart';
-import 'package:traffic_light_detection/pages/locationPage.dart';
+import 'package:traffic_light_detection/pages/pdfPage.dart';
+import 'package:traffic_light_detection/pages/trafficInformationPage.dart';
 import 'package:traffic_light_detection/pages/loginPage.dart';
 import 'package:traffic_light_detection/pages/profilePage.dart';
 import 'package:traffic_light_detection/pages/ratingPage.dart';
-import 'package:traffic_light_detection/pages/restApiPage.dart';
+import 'package:traffic_light_detection/pages/weatherPage.dart';
 
 class DrawerPage extends StatefulWidget {
   const DrawerPage({super.key});
@@ -42,14 +43,26 @@ class _DrawerPageState extends State<DrawerPage> {
       child: ListView(
         children: <Widget>[
           UserAccountsDrawerHeader(
-            accountName: Text("$userName",style: TextStyle(fontSize:20),),
+            decoration: BoxDecoration(
+              color: Colors.indigo[400], // Set the background color
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20), // Set border radius on the bottom left
+                bottomRight: Radius.circular(20), // Set border radius on the bottom right
+              ),
+            ),
+            accountName: Text(
+              "$userName",
+              style: TextStyle(fontSize: 20),
+            ),
             accountEmail: Text("$email"),
             currentAccountPicture: CircleAvatar(
-              backgroundImage:( profilePictureUrl!="")?NetworkImage(profilePictureUrl!)
-                  :NetworkImage('https://i.stack.imgur.com/l60Hf.png'),
+              backgroundImage: (profilePictureUrl != "")
+                  ? NetworkImage(profilePictureUrl!)
+                  : NetworkImage('https://i.stack.imgur.com/l60Hf.png'),
               backgroundColor: Colors.white,
             ),
           ),
+
           ListTile(
             leading: Icon(Icons.dashboard),
             title: Text("Dashboard"),
@@ -106,17 +119,17 @@ class _DrawerPageState extends State<DrawerPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LocationPage()),
+                MaterialPageRoute(builder: (context) => TrafficInformationPage()),
               );
             },
           ),
           ListTile(
-            leading: Icon(Icons.api_outlined),
-            title: Text("Rest Api"),
+            leading: Icon(Icons.celebration_outlined),
+            title: Text("Weather"),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => RestApiPage()),
+                MaterialPageRoute(builder: (context) => WeatherPage()),
               );
             },
           ),
@@ -127,6 +140,16 @@ class _DrawerPageState extends State<DrawerPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => RatingPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.download),
+            title: Text("Download"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PdfPage()),
               );
             },
           ),

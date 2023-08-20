@@ -10,9 +10,6 @@ class PostPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Post Page'),
-      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('statuses')
@@ -22,7 +19,12 @@ class PostPage extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
+
           final List<QueryDocumentSnapshot> documents = snapshot.data!.docs;
+
+          if (documents.isEmpty) {
+            return Center(child: Text('No posts available'));
+          }
 
           return ListView.builder(
             itemCount: documents.length,
@@ -51,88 +53,107 @@ class PostCard extends StatelessWidget {
     final isLiked = likedBy?.contains(user!.email) ?? false;
 
     return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Display the user's profile picture (if available)
-              status['profilePicture'] != null
-                  ? CircleAvatar(
-                backgroundImage: NetworkImage(status['profilePicture']),
-              )
-                  : SizedBox.shrink(), // Or show nothing if the profile picture is null
-              Text(
-                '${status['userName']}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Display the user's profile picture (if available)
+            status['profilePicture'] != null
+                ? CircleAvatar(
+              backgroundImage: NetworkImage(status['profilePicture']),
+              radius: 30,
+            )
+                : SizedBox.shrink(),
+            SizedBox(height: 8),
+            Text(
+              '${status['userName'] ?? ''}',
+              style: const TextStyle(
+                fontSize: 18,
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
               ),
-              Text(
-                DateFormat('dd MMM, yyyy HH:mm')
-                    .format(status['timestamp'].toDate()),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Text(
-                status['text'],
-                style: const TextStyle(fontSize: 16),
-              ),
-            ],
-          ),
-          Container(
-            child: status['image'] != null
-                ? Image.network(status['image'])
-                : null,
-          ),
-          const Divider(
-            color: Colors.grey,
-            thickness: 1,
-            indent: 0,
-            endIndent: 0,
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.thumb_up),
-                color: isLiked ? Colors.blue : Colors.grey,
-                onPressed: () {
-                  // ... Like/Unlike functionality ...
-                },
-              ),
-              Text(
-                "${status['likes']} Likes  ",
-                style: const TextStyle(color: Colors.grey),
-              ),
-              IconButton(
-                icon: const Icon(Icons.comment_bank_outlined),
+            ),
+            Text(
+              status['timestamp'] != null
+                  ? DateFormat('dd MMM, yyyy HH:mm')
+                  .format(status['timestamp'].toDate())
+                  : '',
+              style: const TextStyle(
+                fontSize: 12,
                 color: Colors.grey,
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => CommentPage(url: statusId)));
-                },
               ),
-              status['comments'] == 0
-                  ? const Text(
-                "0 Comments  ",
-                style: TextStyle(color: Colors.grey),
-              )
-                  : Text(
-                "${status['comments']} Comments",
-                style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              status['text'] ?? '',
+              style: const TextStyle(fontSize: 16),
+            ),
+            status['image'] != null
+                ? AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.network(
+                status['image'],
+                fit: BoxFit.cover,
               ),
-            ],
-          ),
-          const Divider(),
-        ],
+            )
+                : SizedBox.shrink(),
+            const Divider(
+              color: Colors.grey,
+              thickness: 1,
+              height: 20,
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.thumb_up),
+                  color: isLiked ? Colors.blue : Colors.grey,
+                  onPressed: () {
+                    if (!isLiked) {
+                      FirebaseFirestore.instance
+                          .collection('statuses')
+                          .doc(statusId)
+                          .update({
+                        'likes': FieldValue.increment(1),
+                        'likeBy': FieldValue.arrayUnion([user!.email]),
+                      });
+                    } else {
+                      FirebaseFirestore.instance
+                          .collection('statuses')
+                          .doc(statusId)
+                          .update({
+                        'likes': FieldValue.increment(-1),
+                        'likeBy': FieldValue.arrayRemove([user!.email]),
+                      });
+                    }
+                  },
+                ),
+                Text(
+                  "${status['likes'] ?? 0} Likes  ",
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                IconButton(
+                  icon: Icon(Icons.comment_bank_outlined),
+                  color: Colors.grey,
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => CommentPage(url: statusId)));
+                  },
+                ),
+                Text(
+                  "${status['comments'] ?? 0} Comments",
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+            const Divider(),
+          ],
+        ),
       ),
     );
   }

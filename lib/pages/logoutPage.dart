@@ -20,7 +20,7 @@ class _LogoutPageState extends State<LogoutPage> {
             FirebaseAuth.instance.signOut().then((value) {
               print("Signout");
 
-              Navigator.push(context,
+              Navigator.pop(context,
                   MaterialPageRoute(builder: (context) => LoginPage()));
             });
           },
@@ -33,4 +33,3 @@ class _LogoutPageState extends State<LogoutPage> {
     );
   }
 }
-

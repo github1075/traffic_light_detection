@@ -7,47 +7,49 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:traffic_light_detection/pages/dashboardPage.dart';
+
 class CreatePostPage extends StatefulWidget {
-  const CreatePostPage({super.key});
+  const CreatePostPage({Key? key}) : super(key: key);
 
   @override
   State<CreatePostPage> createState() => _CreatePostPageState();
 }
 
 class _CreatePostPageState extends State<CreatePostPage> {
-  String userName=" your name";
-  String  profilePictureUrl='https://i.stack.imgur.com/l60Hf.png';
-  User? user=FirebaseAuth.instance.currentUser;
+  bool isPostEnable=false;
+  String userName = "your name";
+  String profilePictureUrl = 'https://i.stack.imgur.com/l60Hf.png';
+  User? user = FirebaseAuth.instance.currentUser;
   DateTime? now;
-  String formattedDate="";
+  String formattedDate = "";
   File? _imageFile;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final TextEditingController _textEditingController = TextEditingController();
-// current date  and time
+
+  // current date  and time
   String getDate() {
     now = DateTime.now();
-    setState(() {
-      formattedDate= DateFormat('MMMM d \'at\' h:mma').format(now!);
-
-    });
+    formattedDate = DateFormat('MMMM d \'at\' h:mma').format(now!);
     return formattedDate;
-
   }
 
-// user profile pic and username
+  // user profile pic and username
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    FirebaseFirestore.instance.collection("UsersInformation").doc(user?.email).get().then((value) {
+    FirebaseFirestore.instance
+        .collection("UsersInformation")
+        .doc(user?.email)
+        .get()
+        .then((value) {
       setState(() {
         userName = value.data()?["userName"];
         profilePictureUrl = value.data()?["profilePicture"];
-
       });
     });
   }
+
   // upload the post
   Future<void> _uploadStatus() async {
     String? imageUrl;
@@ -66,8 +68,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
     // Add the status to Firestore
     await _firestore.collection('statuses').add({
       'postBy': user!.email,
-      'profilePicture':profilePictureUrl,
-      'userName':userName,
+      'profilePicture': profilePictureUrl,
+      'userName': userName,
       'text': _textEditingController.text,
       'image': imageUrl,
       'timestamp': DateTime.now(),
@@ -81,17 +83,35 @@ class _CreatePostPageState extends State<CreatePostPage> {
     setState(() {
       _imageFile = null;
     });
-    Navigator.pushReplacement(context,MaterialPageRoute(builder: (context)=>DashboardPage()));
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => DashboardPage()));
   }
+
   Future<void> _selectImage() async {
     final ImagePicker _picker = ImagePicker();
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     setState(() {
       if (image != null) {
         _imageFile = File(image.path);
+        enablePostButton();
       }
     });
   }
+  void enablePostButton(){
+
+    if((_imageFile!=null)||(_textEditingController.text.trim().isNotEmpty && _textEditingController.text.trim()!="")){
+      print("yes");
+      setState(() {
+        isPostEnable=true;
+      });
+    }
+    else{
+      setState(() {
+        isPostEnable=false;
+      });
+    }
+ }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,9 +119,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
         backgroundColor: Colors.indigo[400],
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed:() {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>DashboardPage()));
-
+          onPressed: () {
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => DashboardPage()));
           },
         ),
         title: const Text(
@@ -109,82 +129,124 @@ class _CreatePostPageState extends State<CreatePostPage> {
         ),
         centerTitle: false,
       ),
-      // POST FORM
-      body: Column(
-        children:[
-          Padding(padding: EdgeInsets.only(top: 0.0)),
-          const Divider(),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0), // Add padding
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Divider(),
               Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    backgroundImage: NetworkImage(profilePictureUrl),
-                    radius: 70,
-                  ),
-                  SizedBox(height:5,),
-                  Text("$userName",style:TextStyle(color:Colors.blue,fontSize:25,fontWeight: FontWeight.bold),),
-                  SizedBox(height:5,),
-                  Text(getDate(),style:TextStyle(color:Colors.black,fontSize:20,fontWeight: FontWeight.normal),),
-                  SizedBox(height:10,),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.3,
-                    child: TextField(
-                      controller: _textEditingController,
-                      decoration: const InputDecoration(
-                          hintText: "Write a caption...",
-                          border: InputBorder.none),
-                      maxLines: 8,
+                  Center(
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage(profilePictureUrl),
+                      radius: 70,
                     ),
                   ),
-
+                  SizedBox(height: 10),
+                  Center(
+                    child: Text(
+                      "$userName",
+                      style: TextStyle(
+                          color: Colors.indigo[500],
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Center(
+                    child: Text(
+                      getDate(),
+                      style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    controller: _textEditingController,
+                    onChanged:(value){
+                      enablePostButton();
+                    },
+                    decoration: InputDecoration(
+                        hintText: "Write a caption...",
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.indigo.shade300
+                          )
+                        )),
+                    maxLines: 8,
+                  ),
                 ],
               ),
-          Divider(),
-          _imageFile != null?
-          SizedBox(
-            height: 200,
-            child: Image.file(
-              _imageFile!,
-              height: 200,
-              fit: BoxFit.cover,
-            ),
-          )
-          :SizedBox(height: 20,),
-          Row(
-            mainAxisAlignment:MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-
-            children: [
-              ElevatedButton.icon (
-                icon: const Icon (
-                  Icons.image,
-                  color: Colors.white,
-                  size:30,
-                ),
-                label: const Text ('Picture',style: TextStyle(color: Colors.white,fontSize:15,fontWeight: FontWeight.bold),),
-                onPressed:_selectImage,
-                style: ElevatedButton.styleFrom(
-                  fixedSize: Size(200, 50),
-                  backgroundColor: Colors.green[400]
-                ),
-              ),
-              ElevatedButton.icon (
-                icon: const Icon (
-                  Icons.control_point_sharp,
-                  color: Colors.white,
-                  size: 30,
-                ),
-                label: const Text ('Post',style: TextStyle(color: Colors.white,fontSize:15,fontWeight: FontWeight.bold),),
-                onPressed:_uploadStatus,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:Colors.indigo,
-                  fixedSize: Size(200, 50),
-                ),
+              Divider(),
+              _imageFile != null
+                  ? Column(
+                children: [
+                  SizedBox(height: 10),
+                  Center(
+                    child: Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.file(
+                          _imageFile!,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               )
-
+                  : SizedBox(height: 20),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(
+                      Icons.image,
+                      color: Colors.white,
+                    ),
+                    label: const Text('Picture'),
+                    onPressed: _selectImage,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    icon: const Icon(
+                      Icons.post_add,
+                      color: Colors.white,
+                    ),
+                    label: const Text('Post'),
+                    onPressed: isPostEnable ? _uploadStatus: null ,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ],
-
-          )
-        ],
+          ),
+        ),
       ),
     );
   }
